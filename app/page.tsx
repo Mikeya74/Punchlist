@@ -56,6 +56,9 @@ export default function App() {
     const sort_order = rooms.filter(r => r.project_id === projectId).length;
     await supabase.from("rooms").insert({ project_id: projectId, name, sort_order });
   }
+  async function renameRoom(id: string, name: string) {
+    await supabase.from("rooms").update({ name }).eq("id", id);
+  }
   async function deleteRoom(id: string) {
     await supabase.from("rooms").delete().eq("id", id);
   }
@@ -92,10 +95,11 @@ export default function App() {
 
   if (!loaded) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:T.textMuted, fontSize:14 }}>Loading…</div>;
 
-  const shared = { projects, rooms, items, trades, projectId, roomId,
+  const shared = {
+    projects, rooms, items, trades, projectId, roomId,
     setProjectId, setRoomId, setView,
     addProject, updateProject, deleteProject,
-    addRoom, deleteRoom,
+    addRoom, renameRoom, deleteRoom,
     addItem, toggleItem, editItem, deleteItem, deleteDoneItems,
     reorderProjects, reorderRooms,
     addTrade, deleteTrade,

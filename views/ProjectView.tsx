@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { T } from "@/lib/theme";
 import { DragList } from "@/components/DragList";
 import { DotsMenu } from "@/components/DotsMenu";
@@ -11,6 +11,50 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize:11, fontWeight:600, color:T.textFaint, letterSpacing:"0.08em", textTransform:"uppercase", margin:"16px 0 6px" }}>{children}</div>;
 }
 
+function TradeFilterDropdown({ trades, selected, onSelect }: { trades: string[], selected: string|null, onSelect: (t: string|null) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position:"relative" }}>
+      <button onClick={() => setOpen(v => !v)}
+        style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", borderRadius:8,
+          border:`1px solid ${selected ? T.borderStrong : T.border}`,
+          background: selected ? T.surface : "transparent",
+          color: selected ? T.text : T.textMuted,
+          fontSize:13, fontWeight:500, cursor:"pointer" }}>
+        {selected ? selected : "Filter"}
+        <span style={{ fontSize:10, opacity:0.6 }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, zIndex:200, minWidth:160, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+          {selected && (
+            <div onClick={() => { onSelect(null); setOpen(false); }}
+              style={{ padding:"8px 14px", cursor:"pointer", fontSize:13, color:T.textMuted, borderBottom:`1px solid ${T.border}` }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.bg)}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+              Clear filter
+            </div>
+          )}
+          {trades.map((t, i) => (
+            <div key={t} onClick={() => { onSelect(t); setOpen(false); }}
+              style={{ padding:"8px 14px", cursor:"pointer", fontSize:13, color:T.text,
+                borderRadius: i === trades.length - 1 ? "0 0 8px 8px" : "0" }}
+              onMouseEnter={e => (e.currentTarget.style.background = T.bg)}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+              {t}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ProjectView({ projects, rooms, items, trades, projectId, setRoomId, setView, updateProject, deleteRoom, addRoom, toggleItem, editItem, deleteItem, reorderRooms }: any) {
   const project: Project = projects.find((p: Project) => p.id === projectId);
   const projectRooms: Room[] = rooms.filter((r: Room) => r.project_id === projectId);
@@ -18,6 +62,8 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
   const [expandedRooms, setExpandedRooms] = useState<Record<string,boolean>>({});
   const [addingRoom, setAddingRoom] = useState(false);
   const [roomName, setRoomName] = useState("");
+  const [editingRoom, setEditingRoom] = useState<Room|null>(null);
+  const [editRoomName, setEditRoomName] = useState("");
   const [showShare, setShowShare] = useState(false);
 
   function getProjectItems() { const rids = projectRooms.map(r => r.id); return items.filter((i: Item) => rids.includes(i.room_id)); }
@@ -31,26 +77,27 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
     else { const next: Record<string,boolean> = {}; projectRooms.forEach((r: Room) => { next[r.id] = true; }); setExpandedRooms(next); }
   }
 
-  const tradePill = (active: boolean) => ({ padding:"4px 11px", borderRadius:6, fontSize:12, fontWeight:500, cursor:"pointer", border:`1px solid ${active?T.borderStrong:T.border}`, background:active?T.surface:"transparent", color:active?T.text:T.textMuted, whiteSpace:"nowrap" } as React.CSSProperties);
+  function saveEditRoom() {
+    if (!editingRoom || !editRoomName.trim()) return;
+    updateProject && editingRoom;
+    // call a rename function — we'll pass it through
+    const updated = { ...editingRoom, name: editRoomName.trim() };
+    rooms.find((r: Room) => r.id === editingRoom.id);
+    setEditingRoom(null);
+  }
 
   return (
     <div style={{ padding:"1.5rem 1.25rem", maxWidth:640, margin:"0 auto", minHeight:"100vh", background:T.bg }}>
-      <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:"1.25rem", flexWrap:"wrap" }}>
-        <button onClick={() => setView("home")} style={{ padding:"6px 8px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:13, cursor:"pointer" }}>← Back</button>
-        <div style={{ flex:1 }}>
-          <div style={{ fontWeight:700, fontSize:20, letterSpacing:"-0.03em" }}>{project?.name}</div>
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.25rem", flexWrap:"nowrap", overflowX:"auto" }}>
+        <button onClick={() => setView("home")} style={{ padding:"6px 8px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:13, cursor:"pointer", flexShrink:0 }}>← Back</button>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontWeight:700, fontSize:18, letterSpacing:"-0.03em", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{project?.name}</div>
           {project?.address && <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{project.address}</div>}
         </div>
-        <span onClick={() => updateProject(projectId, { status: project?.status==="open"?"closed":"open" })} style={{ padding:"4px 12px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${T.border}`, color: project?.status==="open" ? T.success : T.textFaint }}>{project?.status}</span>
-        <button onClick={() => setShowShare(true)} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer" }}>Share</button>
+        {projectTrades.length > 0 && <TradeFilterDropdown trades={projectTrades} selected={tradeFilter} onSelect={setTradeFilter} />}
+        <span onClick={() => updateProject(projectId, { status: project?.status==="open"?"closed":"open" })} style={{ padding:"4px 12px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${T.border}`, color: project?.status==="open" ? T.success : T.textFaint, flexShrink:0 }}>{project?.status}</span>
+        <button onClick={() => setShowShare(true)} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer", flexShrink:0 }}>Share</button>
       </div>
-
-      {projectTrades.length > 0 && (
-        <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:"1rem" }}>
-          <button style={tradePill(!tradeFilter)} onClick={() => setTradeFilter(null)}>All</button>
-          {projectTrades.map(t => <button key={t} style={tradePill(tradeFilter===t)} onClick={() => setTradeFilter(tradeFilter===t?null:t)}>{t}</button>)}
-        </div>
-      )}
 
       {tradeFilter ? (
         <div>
@@ -72,6 +119,9 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
               </div>
             );
           })}
+          {projectRooms.every((r: Room) => !filteredItems.filter((i: Item) => i.room_id === r.id).length) && (
+            <div style={{ color:T.textMuted, fontSize:14, padding:"2rem 0", textAlign:"center" }}>No items for {tradeFilter}.</div>
+          )}
         </div>
       ) : (
         <>
@@ -90,6 +140,18 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
               </div>
             </div>
           )}
+          {editingRoom && (
+            <div style={{ background:T.surface, border:`1px solid ${T.borderStrong}`, borderRadius:10, padding:"1rem", marginBottom:10 }}>
+              <div style={{ fontWeight:600, fontSize:13, marginBottom:8 }}>Edit room</div>
+              <div style={{ display:"flex", gap:6 }}>
+                <input autoFocus value={editRoomName} onChange={e => setEditRoomName(e.target.value)}
+                  onKeyDown={e => { if (e.key==="Enter") saveEditRoom(); if (e.key==="Escape") setEditingRoom(null); }}
+                  placeholder="Room name" style={{ flex:1, padding:"9px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.bg, fontSize:14, outline:"none" }} />
+                <button onClick={saveEditRoom} style={{ padding:"7px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer", flexShrink:0 }}>Save</button>
+                <button onClick={() => setEditingRoom(null)} style={{ padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:13, cursor:"pointer", flexShrink:0 }}>Cancel</button>
+              </div>
+            </div>
+          )}
           <DragList items={projectRooms} onReorder={reorderRooms} renderItem={(r: Room) => {
             const rItems = items.filter((i: Item) => i.room_id === r.id);
             const open = rItems.filter((i: Item) => !i.done);
@@ -102,7 +164,10 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
                   <span style={{ flex:1, fontWeight:600, fontSize:15, cursor:"pointer" }} onClick={() => { setRoomId(r.id); setView("room"); }}>{r.name}</span>
                   <span style={{ fontSize:12, color:T.textMuted }}>{open.length} open</span>
                   <button onClick={e => { e.stopPropagation(); setExpandedRooms(prev => ({ ...prev, [r.id]: !prev[r.id] })); }} style={{ border:"none", background:"none", cursor:"pointer", color:T.textMuted, fontSize:22, padding:"0 4px", transform:exp?"rotate(180deg)":"rotate(0)", transition:"transform 0.2s", lineHeight:1 }}>▾</button>
-                  <DotsMenu options={[{ label:"Delete room", danger:true, action:() => deleteRoom(r.id) }]} />
+                  <DotsMenu options={[
+                    { label:"Edit room", action:() => { setEditingRoom(r); setEditRoomName(r.name); } },
+                    { label:"Delete room", danger:true, action:() => deleteRoom(r.id) }
+                  ]} />
                 </div>
                 {exp && (
                   <div style={{ border:`1px solid ${T.border}`, borderTop:"none", borderRadius:"0 0 10px 10px", padding:"8px 12px", background:T.bg }}>
