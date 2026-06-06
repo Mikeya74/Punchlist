@@ -7,6 +7,7 @@ import type { Project } from "@/lib/types";
 
 export function HomeView({ projects, rooms, items, trades, setProjectId, setView, addProject, updateProject, deleteProject, reorderProjects, addTrade, deleteTrade }: any) {
   const [filter, setFilter] = useState<"all"|"open"|"closed">("all");
+  const [showStatus, setShowStatus] = useState(false);
   const [addingProject, setAddingProject] = useState(false);
   const [editingProject, setEditingProject] = useState<Project|null>(null);
   const [name, setName] = useState("");
@@ -16,10 +17,12 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
   const [showSettings, setShowSettings] = useState(false);
   const [newTrade, setNewTrade] = useState("");
   const settingsRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function h(e: MouseEvent) {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setShowSettings(false);
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) setShowStatus(false);
     }
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -44,32 +47,50 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
     setEditingProject(null);
   }
 
-  const fp = (active: boolean) => ({
-    padding:"5px 13px", borderRadius:20, fontSize:12, fontWeight:500, cursor:"pointer",
-    border:`1px solid ${active?T.borderStrong:T.border}`,
-    background:active?T.surface:"transparent",
-    color:active?T.text:T.textMuted
-  } as React.CSSProperties);
-
   return (
     <div style={{ padding:"1.5rem 1.25rem", maxWidth:640, margin:"0 auto", minHeight:"100vh", background:T.bg }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem", flexWrap:"nowrap", overflowX:"visible" }}>
+
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem" }}>
         <span style={{ fontWeight:700, fontSize:20, color:T.text, flexShrink:0, letterSpacing:"-0.03em" }}>Projects</span>
-        <div style={{ display:"flex", gap:4, flexShrink:0 }}>
-          {(["all","open","closed"] as const).map(f => (
-            <button key={f} style={fp(filter===f)} onClick={() => setFilter(f)}>
-              {f.charAt(0).toUpperCase()+f.slice(1)}
-            </button>
-          ))}
+
+        {/* Status dropdown */}
+        <div style={{ position:"relative", flexShrink:0 }} ref={statusRef}>
+          <button onClick={(e) => { e.stopPropagation(); setShowStatus(v => !v); }}
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", borderRadius:8,
+              border:`1px solid ${filter !== "all" ? T.borderStrong : T.border}`,
+              background: filter !== "all" ? T.surface : "transparent",
+              color: filter !== "all" ? T.text : T.textMuted,
+              fontSize:13, fontWeight:500, cursor:"pointer" }}>
+            {filter.charAt(0).toUpperCase()+filter.slice(1)}
+            <span style={{ fontSize:10, opacity:0.6 }}>{showStatus ? "▲" : "▼"}</span>
+          </button>
+          {showStatus && (
+            <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, zIndex:200, minWidth:120, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+              {(["all","open","closed"] as const).map((f, i, arr) => (
+                <div key={f} onClick={() => { setFilter(f); setShowStatus(false); }}
+                  style={{ padding:"8px 14px", cursor:"pointer", fontSize:13,
+                    color: filter === f ? T.text : T.textMuted,
+                    fontWeight: filter === f ? 600 : 400,
+                    borderRadius: i === 0 ? "8px 8px 0 0" : i === arr.length-1 ? "0 0 8px 8px" : "0" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = T.bg)}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                  {f.charAt(0).toUpperCase()+f.slice(1)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
         <button onClick={() => setAddingProject(true)} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer", flexShrink:0 }}>
           + New Project
         </button>
+
+        {/* Settings */}
         <div style={{ position:"relative", flexShrink:0, marginLeft:"auto" }} ref={settingsRef}>
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowSettings(v => !v); }}
+          <button onClick={(e) => { e.stopPropagation(); setShowSettings(v => !v); }}
             style={{ padding:"6px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:showSettings?T.surfaceHover:T.surface, color:T.textMuted, fontSize:13, cursor:"pointer" }}>
-            ⚙ Settings
+            ⚙
           </button>
           {showSettings && (
             <div style={{ position:"absolute", right:0, top:"calc(100% + 6px)", background:T.surface, border:`1px solid ${T.border}`, borderRadius:12, padding:"1.25rem", minWidth:260, zIndex:200, boxShadow:"0 8px 24px rgba(0,0,0,0.08)" }}>
@@ -84,15 +105,11 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
                 ))}
               </div>
               <div style={{ display:"flex", gap:6 }}>
-                <input
-                  value={newTrade}
-                  onChange={e => setNewTrade(e.target.value)}
+                <input value={newTrade} onChange={e => setNewTrade(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter" && newTrade.trim()) { addTrade(newTrade.trim()); setNewTrade(""); } }}
                   placeholder="Add trade…"
-                  style={{ flex:1, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.bg, fontSize:13, outline:"none", color:T.text }}
-                />
-                <button
-                  onClick={() => { if (newTrade.trim()) { addTrade(newTrade.trim()); setNewTrade(""); } }}
+                  style={{ flex:1, padding:"7px 10px", borderRadius:8, border:`1px solid ${T.border}`, background:T.bg, fontSize:13, outline:"none", color:T.text }} />
+                <button onClick={() => { if (newTrade.trim()) { addTrade(newTrade.trim()); setNewTrade(""); } }}
                   style={{ padding:"7px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer" }}>
                   Add
                 </button>
@@ -102,6 +119,7 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
         </div>
       </div>
 
+      {/* New project form */}
       {addingProject && (
         <div style={{ background:T.surface, border:`1px solid ${T.borderStrong}`, borderRadius:10, padding:"1rem", marginBottom:12 }}>
           <div style={{ fontWeight:600, fontSize:13, color:T.text, marginBottom:10 }}>New project</div>
@@ -124,6 +142,7 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
         </div>
       )}
 
+      {/* Edit project form */}
       {editingProject && (
         <div style={{ background:T.surface, border:`1px solid ${T.borderStrong}`, borderRadius:10, padding:"1rem", marginBottom:12 }}>
           <div style={{ fontWeight:600, fontSize:13, color:T.text, marginBottom:10 }}>Edit project</div>
