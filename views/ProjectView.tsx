@@ -22,7 +22,7 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
 
   function getProjectItems() { const rids = projectRooms.map(r => r.id); return items.filter((i: Item) => rids.includes(i.room_id)); }
   const allItems = getProjectItems();
-  const projectTrades = [...new Set(allItems.map((i: Item) => i.trade).filter(Boolean))] as string[];
+  const projectTrades = Array.from(new Set(allItems.map((i: Item) => i.trade).filter(Boolean))) as string[];
   const filteredItems = tradeFilter ? allItems.filter((i: Item) => i.trade === tradeFilter) : allItems;
   const anyExpanded = projectRooms.some((r: Room) => expandedRooms[r.id]);
 
