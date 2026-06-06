@@ -93,7 +93,7 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
 
   return (
     <div style={{ padding:"1.5rem 1.25rem", maxWidth:640, margin:"0 auto", minHeight:"100vh", background:T.bg }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.25rem", flexWrap:"nowrap", overflowX:"auto" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.25rem", flexWrap:"nowrap", overflowX:"visible" }}>
         <button onClick={() => setView("home")} style={{ padding:"6px 8px", borderRadius:8, border:`1px solid ${T.border}`, background:"transparent", color:T.textMuted, fontSize:13, cursor:"pointer", flexShrink:0 }}>← Back</button>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontWeight:700, fontSize:18, letterSpacing:"-0.03em", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", color:T.text }}>{project?.name}</div>

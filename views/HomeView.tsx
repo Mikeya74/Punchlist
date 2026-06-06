@@ -53,7 +53,7 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
 
   return (
     <div style={{ padding:"1.5rem 1.25rem", maxWidth:640, margin:"0 auto", minHeight:"100vh", background:T.bg }}>
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem", flexWrap:"nowrap", overflowX:"auto" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem", flexWrap:"nowrap", overflowX:"visible" }}>
         <span style={{ fontWeight:700, fontSize:20, color:T.text, flexShrink:0, letterSpacing:"-0.03em" }}>Projects</span>
         <div style={{ display:"flex", gap:4, flexShrink:0 }}>
           {(["all","open","closed"] as const).map(f => (
