@@ -50,7 +50,8 @@ export default function App() {
   const [roomId, setRoomId] = useState<string|null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("pl_team_code");
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem("pl_team_code");
     if (saved) setTeamCode(saved);
     else setLoaded(true);
   }, []);
@@ -83,7 +84,9 @@ export default function App() {
   }, [teamCode]);
 
   function handleEnterCode(code: string) {
-    setTeamCode(code.toUpperCase());
+    const upper = code.toUpperCase();
+    window.localStorage.setItem("pl_team_code", upper);
+    setTeamCode(upper);
   }
 
   async function addProject(name: string, address: string) {
