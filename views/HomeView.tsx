@@ -180,12 +180,9 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
               {p.address && <div style={{ fontSize:12, color:T.textMuted, marginTop:1 }}>{p.address}</div>}
             </div>
             {open > 0 && <span style={{ fontSize:12, color:T.textMuted, flexShrink:0 }}>{open} open</span>}
-            <span onClick={e => { e.stopPropagation(); updateProject(p.id, { status: p.status==="open" ? "closed" : "open" }); }}
-              style={{ padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:500, cursor:"pointer", border:`1px solid ${T.border}`, color: p.status==="open" ? T.success : T.textFaint, flexShrink:0 }}>
-              {p.status}
-            </span>
             <DotsMenu options={[
               { label:"Edit project", action:() => startEdit(p) },
+              { label: p.status === "open" ? "Mark as closed" : "Mark as open", action:() => updateProject(p.id, { status: p.status==="open" ? "closed" : "open" }) },
               { label:"Delete project", danger:true, action:() => deleteProject(p.id) }
             ]} />
           </div>
