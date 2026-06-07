@@ -5,8 +5,8 @@ import { DragList } from "@/components/DragList";
 import { DotsMenu } from "@/components/DotsMenu";
 import { ShareModal } from "@/components/ShareModal";
 import { Badge } from "@/components/Badge";
-import type { Project, Room, Item } from "@/lib/types";
 import { useSwipeBack } from "@/components/useSwipeBack";
+import type { Project, Room, Item } from "@/lib/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize:11, fontWeight:600, color:T.textFaint, letterSpacing:"0.08em", textTransform:"uppercase", margin:"16px 0 6px" }}>{children}</div>;
@@ -102,10 +102,6 @@ export function ProjectView({ projects, rooms, items, trades, projectId, setRoom
           {project?.address && <div style={{ fontSize:12, color:T.textMuted, marginTop:2 }}>{project.address}</div>}
         </div>
         <TradeFilterDropdown trades={trades} selected={tradeFilter} onSelect={setTradeFilter} />
-        <span onClick={() => updateProject(projectId, { status: project?.status==="open"?"closed":"open" })}
-          style={{ padding:"4px 12px", borderRadius:20, fontSize:11, fontWeight:600, cursor:"pointer", border:`1px solid ${T.border}`, color: project?.status==="open" ? T.success : T.textFaint, flexShrink:0 }}>
-          {project?.status}
-        </span>
         <button onClick={() => setShowShare(true)} style={{ padding:"6px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer", flexShrink:0 }}>Share</button>
       </div>
 
