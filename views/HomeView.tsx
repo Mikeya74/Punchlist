@@ -1,11 +1,12 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { T } from "@/lib/theme";
+import { supabase } from "@/lib/supabase";
 import { DragList } from "@/components/DragList";
 import { DotsMenu } from "@/components/DotsMenu";
 import type { Project } from "@/lib/types";
 
-export function HomeView({ projects, rooms, items, trades, setProjectId, setView, addProject, updateProject, deleteProject, reorderProjects, addTrade, deleteTrade }: any) {
+export function HomeView({ projects, rooms, items, trades, teamCode, setProjectId, setView, addProject, updateProject, deleteProject, reorderProjects, addTrade, deleteTrade }: any) {
   const [filter, setFilter] = useState<"all"|"open"|"closed">("all");
   const [showStatus, setShowStatus] = useState(false);
   const [addingProject, setAddingProject] = useState(false);
@@ -16,6 +17,7 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
   const [editAddr, setEditAddr] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [newTrade, setNewTrade] = useState("");
+  const [uploading, setUploading] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +47,16 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
     if (!editingProject || !editName.trim()) return;
     updateProject(editingProject.id, { name: editName.trim(), address: editAddr.trim() });
     setEditingProject(null);
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    await supabase.storage.from("logos").upload(`${teamCode}/logo.png`, file, { upsert: true });
+    setUploading(false);
+    setShowSettings(false);
+    window.location.reload();
   }
 
   return (
@@ -104,7 +116,7 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
                   </span>
                 ))}
               </div>
-              <div style={{ display:"flex", gap:6 }}>
+              <div style={{ display:"flex", gap:6, marginBottom:16 }}>
                 <input value={newTrade} onChange={e => setNewTrade(e.target.value)}
                   onKeyDown={e => { if (e.key==="Enter" && newTrade.trim()) { addTrade(newTrade.trim()); setNewTrade(""); } }}
                   placeholder="Add trade…"
@@ -113,6 +125,13 @@ export function HomeView({ projects, rooms, items, trades, setProjectId, setView
                   style={{ padding:"7px 14px", borderRadius:8, border:"none", background:T.accent, color:T.accentText, fontSize:13, fontWeight:500, cursor:"pointer" }}>
                   Add
                 </button>
+              </div>
+              <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:12 }}>
+                <div style={{ fontWeight:600, fontSize:13, color:T.text, marginBottom:8 }}>Logo</div>
+                <label style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"7px 14px", borderRadius:8, border:`1px solid ${T.border}`, background:T.bg, color:T.textMuted, fontSize:13, cursor:"pointer" }}>
+                  {uploading ? "Uploading…" : "Upload logo"}
+                  <input type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={handleLogoUpload} style={{ display:"none" }} />
+                </label>
               </div>
             </div>
           )}
