@@ -6,6 +6,7 @@ import { DotsMenu } from "@/components/DotsMenu";
 import { ShareModal } from "@/components/ShareModal";
 import { Badge } from "@/components/Badge";
 import type { Project, Room, Item } from "@/lib/types";
+import { useSwipeBack } from "@/components/useSwipeBack";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize:11, fontWeight:600, color:T.textFaint, letterSpacing:"0.08em", textTransform:"uppercase", margin:"16px 0 6px" }}>{children}</div>;
@@ -60,6 +61,7 @@ function TradeFilterDropdown({ trades, selected, onSelect }: { trades: string[],
 export function ProjectView({ projects, rooms, items, trades, projectId, setRoomId, setView, updateProject, deleteRoom, renameRoom, addRoom, toggleItem, editItem, deleteItem, reorderRooms }: any) {
   const project: Project = projects.find((p: Project) => p.id === projectId);
   const projectRooms: Room[] = rooms.filter((r: Room) => r.project_id === projectId);
+  useSwipeBack(() => setView("home"));
   const [tradeFilter, setTradeFilter] = useState<string|null>(null);
   const [expandedRooms, setExpandedRooms] = useState<Record<string,boolean>>({});
   const [addingRoom, setAddingRoom] = useState(false);

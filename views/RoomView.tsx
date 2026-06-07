@@ -17,6 +17,7 @@ function SectionLabel({ children, menu }: { children: React.ReactNode; menu?: Re
 
 export function RoomView({ rooms, items, trades, roomId, projectId, setView, addItem, toggleItem, editItem, deleteItem, deleteDoneItems }: any) {
   const room: Room = rooms.find((r: Room) => r.id === roomId);
+  useSwipeBack(() => setView("project"));
   const [sortByTag, setSortByTag] = useState(false);
 
   const roomItems: Item[] = items.filter((i: Item) => i.room_id === roomId);
