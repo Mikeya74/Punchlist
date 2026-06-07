@@ -12,12 +12,10 @@ export function useSwipeBack(onBack: () => void) {
 
     function onTouchEnd(e: TouchEvent) {
       const endX = e.changedTouches[0].clientX;
-      const endY = e.changedTouches[0].clientY;
+      const endY = Math.abs(e.changedTouches[0].clientY - startY);
       const diffX = endX - startX;
-      const diffY = Math.abs(endY - startY);
 
-      // Swipe right at least 80px, and more horizontal than vertical
-      if (diffX > 80 && diffY < 60 && startX < 60) {
+      if (diffX > 80 && endY < 60 && startX < 60) {
         onBack();
       }
     }
