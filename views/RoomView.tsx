@@ -5,6 +5,7 @@ import { ItemInput } from "@/components/ItemInput";
 import { EditableItem } from "@/components/EditableItem";
 import { DotsMenu } from "@/components/DotsMenu";
 import type { Room, Item } from "@/lib/types";
+import { useSwipeBack } from "@/components/useSwipeBack";
 
 function SectionLabel({ children, menu }: { children: React.ReactNode; menu?: React.ReactNode }) {
   return (
