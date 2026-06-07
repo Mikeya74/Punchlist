@@ -6,6 +6,7 @@ import type { Project, Room, Item } from "@/lib/types";
 import { HomeView } from "@/views/HomeView";
 import { ProjectView } from "@/views/ProjectView";
 import { RoomView } from "@/views/RoomView";
+import { Footer } from "@/components/Footer";
 
 function TeamCodeScreen({ onEnter }: { onEnter: (code: string) => void }) {
   const [code, setCode] = useState("");
@@ -167,7 +168,12 @@ export default function App() {
     addTrade, deleteTrade,
   };
 
-  if (view === "home") return <HomeView {...shared} />;
-  if (view === "project") return <ProjectView {...shared} />;
-  if (view === "room") return <RoomView {...shared} />;
+ return (
+    <div style={{ paddingBottom:60 }}>
+      {view === "home" && <HomeView {...shared} />}
+      {view === "project" && <ProjectView {...shared} />}
+      {view === "room" && <RoomView {...shared} />}
+      <Footer teamCode={teamCode} />
+    </div>
+  );
 }
