@@ -83,9 +83,22 @@ export default function App() {
     return () => { supabase.removeChannel(ch); };
   }, [teamCode]);
 
-  function handleEnterCode(code: string) {
+  async function handleEnterCode(code: string) {
     const upper = code.toUpperCase();
     window.localStorage.setItem("pl_team_code", upper);
+
+    // Check if this team code has any trades yet
+    const { data: existing } = await supabase
+      .from("trades")
+      .select("id")
+      .eq("team_code", upper)
+      .limit(1);
+
+    // If no trades exist, insert defaults
+    if (!existing || existing.length === 0) {
+      await supabase.rpc("insert_default_trades", { p_team_code: upper });
+    }
+
     setTeamCode(upper);
   }
 
